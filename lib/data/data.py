@@ -50,8 +50,7 @@ def init_paths():
     paths.scrapersites_path = os.path.join(paths.funcfg_path, 'scratch.sites')
     paths.scratch_blacklist = os.path.join(paths.funcfg_path, "scratch_blacklist.conf")
     paths.sedbtrick_path = os.path.join(paths.funcfg_path, "sedb_tricks.conf")
-
-
+    
 def init_pystrs():
     # start time
     pystrs.startime = time.time()
@@ -303,6 +302,13 @@ pystrs = AttribDict()
 # object to store options
 pyoptions = AttribDict()
 
+extend_conf_dict = AttribDict()
+extend_conf_dict.prefix = []
+extend_conf_dict.suffix = []
+extend_conf_dict.prefix_suffix = []
+extend_conf_dict.middle = []
+
 init_paths()
 init_pystrs()
 init_pyoptions()
+

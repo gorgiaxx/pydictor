@@ -17,7 +17,7 @@ from lib.fun.decorator import magic
 from lib.data.data import paths, pystrs, pyoptions
 from lib.fun.osjudger import is_Windows, is_Linux, is_Mac
 from lib.data.text import help_dict, helpmsg, pydictor_art_text
-from lib.fun.fun import cool, walks_all_files, mybuildtime, finalsavepath, fun_name
+from lib.fun.fun import cool, mybuildtime, finalsavepath, fun_name
 from rules.EB import EB
 from rules.NB import NB
 from rules.SB import SB
@@ -27,6 +27,7 @@ from rules.SSrule import SSrule
 from rules.NNrule import NNrule
 from rules.Mailrule import Mailrule
 from rules.SingleRule import SingleRule
+import asyncio
 
 
 class SEDB(cmd.Cmd):
@@ -471,21 +472,26 @@ class SEDB(cmd.Cmd):
             results.append(ss)
         for ss in SSrule(pystrs.sedb_dict[pystrs.sedb_range[10]], pystrs.sedb_dict[pystrs.sedb_range[14]]):
             results.append(ss)
-
-        # WeakPass
-        for weakpwd in walks_all_files(paths.sedblist_path):
-            results.append(weakpwd)
+        
         readylist = []
+        readylist.extend(results)
         readylist.extend(pystrs.sedb_dict[pystrs.sedb_range[0]])
         readylist.extend(pystrs.sedb_dict[pystrs.sedb_range[1]])
         readylist.extend(pystrs.sedb_dict[pystrs.sedb_range[2]])
         readylist.extend(pystrs.sedb_dict[pystrs.sedb_range[4]])
         readylist.extend(pystrs.sedb_dict[pystrs.sedb_range[10]])
         readylist.extend(pystrs.sedb_dict[pystrs.sedb_range[14]])
+        
+        extended_list = []
+        extended_list = asyncio.run(extend_enter(readylist, leet=pyoptions.sedb_leet))
+        extended_list = set(extended_list)
         # Using extend_enter plug
-        for extendstr in extend_enter(readylist, leet=pyoptions.sedb_leet):
+        for extendstr in extended_list:
             results.append(extendstr)
-
+        # WeakPass
+        for weakpwd in paths.sedblist_path_travled:
+            results.append(weakpwd)
+        
         @magic
         def sedb():
             for ur in results:

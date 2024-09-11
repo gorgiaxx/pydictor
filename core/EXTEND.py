@@ -13,14 +13,13 @@ import re
 import itertools
 from core.CONF import confcore
 from lib.fun.decorator import magic
-from lib.data.data import paths, pyoptions
+from lib.data.data import paths, pyoptions, extend_conf_dict
 from lib.fun.leetmode import leet_mode_magic
-from lib.fun.fun import cool, walks_all_files, unique, charanger
-try:
-    import ConfigParser
-except:
-    import configparser as ConfigParser
+from lib.fun.fun import cool, unique, charanger
 
+import asyncio
+import concurrent.futures
+import multiprocessing
 
 def extend_magic(rawlist):
     if rawlist == []:
@@ -30,13 +29,12 @@ def extend_magic(rawlist):
     @magic
     def extend():
         if pyoptions.more:
-            for _ in walks_all_files(paths.weblist_path):
+            for _ in paths.weblist_path_travled:
                 yield "".join(_)
-            for _ in walks_all_files(paths.syslist_path):
+            for _ in paths.syslist_path_travled:
                 yield "".join(_)
-        for _ in extend_enter(rawlist, leet=leet):
+        for _ in asyncio.run(extend_enter(rawlist, leet=leet)):
             yield "".join(_)
-
 
 def wordsharker(raw, leet=True):
     # raw word maybe strange case, both not lowercase and uppercase, such as 'myName'
@@ -112,26 +110,32 @@ def wordsharker(raw, leet=True):
 
     return unique(init_word_res)
 
+async def extend_enter(rawlist, leet=True):
+    cpu_count = multiprocessing.cpu_count()
+    # 将rawlist分成与CPU核心数相等的块
+    chunks = [rawlist[i::cpu_count] for i in range(cpu_count)]
+    loop = asyncio.get_event_loop()
+    futures = []
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        for chunk in chunks:
+            # 使用executor提交任务
+            future = loop.run_in_executor(executor, process_chunk, chunk, leet)
+            futures.append(future)
+    
+    results = await asyncio.gather(*futures)
+    # 合并所有结果
+    final_results = []
+    for result in results:
+        final_results.extend(result)
+    return unique(final_results)
 
-def extend_enter(rawlist, leet=True):
-    extend_conf_dict = {'prefix': [], 'suffix': [], 'prefix_suffix': [], 'middle': []}
-    try:
-        config = ConfigParser.SafeConfigParser(allow_no_value=True)
-        config.optionxform = str
-        config.read(paths.extendconf_path)
-        for s in config.sections():
-            for o in config.options(s):
-                extend_conf_dict[s].append(o)
-    except Exception as e:
-        exit(cool.red('[-] Parse extend cfg file error' + pyoptions.CRLF + cool.fuchsia('[!] ' + e.message)))
-
+def process_chunk(chunk, leet):
     res = []
     prefix_content = extend_conf_dict['prefix']
     suffix_content = extend_conf_dict['suffix']
     prefix_suffix_content = extend_conf_dict['prefix_suffix']
     middle_content = extend_conf_dict['middle']
-
-    for raw in rawlist:
+    for raw in chunk:
         shapers = wordsharker(raw, leet=leet)
 
         for middle in middle_content:
@@ -153,7 +157,7 @@ def extend_enter(rawlist, leet=True):
                 middle_lenght = pyoptions.middle_switcher
                 for m in middles:
                     if int(level) >= pyoptions.level:
-                        for item in itertools.product(rawlist, repeat=2):
+                        for item in itertools.product(chunk, repeat=2):
                             if len(item[0]) <= middle_lenght and len(item[1]) <= middle_lenght:
                                 res.append(item[0] + m + item[1])
                         for item in itertools.product(shapers, repeat=2):
@@ -231,7 +235,7 @@ def extend_enter(rawlist, leet=True):
                         if int(level) >= pyoptions.level:
                             res.append(h + w)
 
-    return unique(res)
+    return res
 
 
 def get_extend_dic(target):

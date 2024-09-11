@@ -11,14 +11,19 @@ from __future__ import unicode_literals
 import os
 import random
 
+try:
+    import ConfigParser
+except:
+    import configparser as ConfigParser
+    
 from core.BASE import get_base_dic
 from core.CHAR import get_char_dic
 from core.CHUNK import get_chunk_dic
 from core.EXTEND import get_extend_dic
 from core.SEDB import SEDB
-from lib.data.data import paths, pyoptions
+from lib.data.data import paths, pyoptions, extend_conf_dict
 from lib.data.text import pydictor_art_text
-from lib.fun.fun import cool
+from lib.fun.fun import cool, walks_all_files
 from lib.parse.argsparse import plug_parser, conf_parser, pattern_parser, tool_parser
 from lib.parse.command import parse_args
 from lib.parse.tricksparse import sedb_tricks
@@ -108,6 +113,22 @@ def init():
 if __name__ == '__main__':
     print("{}".format(cool.green(pydictor_art_text)))
     init()
+        
+    paths.weblist_path_travled = set(walks_all_files(paths.weblist_path))
+    paths.syslist_path_travled = set(walks_all_files(paths.syslist_path))
+    paths.sedblist_path_travled = set(walks_all_files(paths.sedblist_path))
+
+    # init extend conf 
+    try:
+        config = ConfigParser.ConfigParser(allow_no_value=True)
+        config.optionxform = str
+        config.read(paths.extendconf_path)
+        for s in config.sections():
+            for o in config.options(s):
+                extend_conf_dict[s].append(o)
+    except Exception as e:
+        exit(cool.red('[-] Parse extend cfg file error' + pyoptions.CRLF + cool.fuchsia('[!] ' + str(e))))
+
     if pyoptions.args_base:
         get_base_dic(pyoptions.args_base)
     elif pyoptions.args_char:

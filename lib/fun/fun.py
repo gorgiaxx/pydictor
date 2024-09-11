@@ -17,7 +17,7 @@ from functools import reduce
 from lib.fun.color import Colored
 from lib.fun.osjudger import py_ver_egt_3
 from lib.encode.md5_encode import md5_encode
-from lib.data.data import pystrs,  paths, pyoptions
+from lib.data.data import pystrs, paths, pyoptions, extend_conf_dict
 
 cool = Colored()
 
@@ -206,9 +206,9 @@ def finishcounter(storepath):
 def finishprinter(storepath, count=None):
     if not count:
         count = finishcounter(storepath)
-    print("[+] A total of :{0:} lines{1}"
-          "[+] Store in   :{2} {1}"
-          "[+] Cost       :{3} seconds".format(cool.orange(count), pyoptions.CRLF, cool.orange(storepath),
+    print("[+] A total of : {0:} lines{1}"
+          "[+] Store in   : {2} {1}"
+          "[+] Cost       : {3} seconds".format(cool.orange(count), pyoptions.CRLF, cool.orange(storepath),
                                                cool.orange(str(time.time() - pystrs.startime)[:6])))
 
 

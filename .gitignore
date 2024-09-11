@@ -2,3 +2,4 @@
 .idea/pydictor.iml
 *.pyc
 /test
+/results
